@@ -1,0 +1,233 @@
+package com.caesar;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+//import java.lang.*;
+
+
+public class Inter extends JFrame {
+    JTextField inp_text, encr_text, decr_text;
+    int key = 1;
+    JSpinner spinner;
+    int ECU = 90; // Англ Загл Верхн_граница (English Capital Top)
+    int ECB = 65; // Англ Загл Нижн_граница (English Capital Bottom)
+    int ELU = 122; // Англ Строчн Верхн_граница (English Lowercase Top)
+    int ELB = 97; //Англ Строчн Нижн_граница (English Lowercase Bottom)
+
+    int RCU = 1071; // Рус Загл Верхн_граница (Russian Capital Top)
+    int RCB = 1040; // Рус Загл Нижн_граница (Russian Capital Bottom)
+    int RLU = 1103; // Рус Строчн Верхн_граница (Russian Lowercase Top)
+    int RLB = 1072; // Рус Строчн Нижн_граница (Russian Lowercase Bottom)
+
+
+    public Inter() {
+        super("Шифр Цезаря");
+        super.setBounds(200, 200, 500, 700);
+        super.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        Container color_people = super.getContentPane();
+        color_people.setLayout(new GridLayout(10, 1, 2, 2)); // Система сеток
+
+        JLabel name0 = new JLabel("Сдвиг");
+        JLabel name1 = new JLabel("Обычный текст");
+        JLabel name2 = new JLabel("Зашифрованный текст");
+        JLabel name3 = new JLabel("Расшифрованный текст");
+        inp_text = new JTextField("", 1);
+        encr_text = new JTextField("", 1);
+        decr_text = new JTextField("не стоит этого делать", 1);
+
+        JButton encr_button = new JButton("Зашифровать");
+        JButton decr_button = new JButton("Расшифровать (пока не работает)");
+
+        spinner = new JSpinner(new SpinnerNumberModel(1, -32, 32, 1));
+
+
+        color_people.add(name0);
+        color_people.add(spinner);
+        color_people.add(name1);
+        color_people.add(inp_text);
+        color_people.add(encr_button);
+        color_people.add(name2);
+        color_people.add(encr_text);
+        color_people.add(decr_button);
+        color_people.add(name3);
+        color_people.add(decr_text);
+
+        encr_button.addActionListener(new Encryption());
+        decr_button.addActionListener(new Decipher());
+        spinner.addChangeListener(new SpinnerChange());
+    }
+
+    class Decipher implements ActionListener { // расшифровка
+        @Override
+        public void actionPerformed(ActionEvent e){
+            String name = encr_text.getText();
+            int l = name.length();
+            String new_name = "";
+            for (int i = 0; i < l; i++){
+                char symb = name.charAt(i);
+                symb = (char) (symb + key);
+                new_name = new_name + symb;
+            }
+            decr_text.setText(name);
+
+        }
+
+    }
+
+    class Encryption implements ActionListener{  // шифровка
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String name = inp_text.getText();
+            int l = name.length();
+            String new_name = "";
+            for (int i = 0; i < l; i++) {
+                char symb = name.charAt(i);
+                if (Character.isLetter(symb)){ // если знак является буквой
+                    int diapason = diapasonForm(symb);
+                    // Спасибо замечательным Ё (1025) и ё (1105): Е, е (1045, 1077), а Ж,ж (1046, 1078)
+                    int yo_modifier = isYo(symb, diapason);
+                    symb = (char) (symb + key);
+                    symb = diapasonRound(symb, diapason); // вот тут надо делать новый "раунд"
+                    symb = (char) (symb + yo_modifier); // сдвиг с учётом ё
+                    symb = diapasonRound(symb, diapason); // второй раз
+                }
+                new_name = new_name + symb;
+            }
+            encr_text.setText(new_name);
+        }
+    }
+
+    class SpinnerChange implements ChangeListener{  // при смене значения
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            key = (Integer) spinner.getValue();
+            System.out.println(key);
+            System.out.println('ё' + 1);
+        }
+    }
+
+    public int diapasonForm (char symbol){
+        int d;
+        if(symbol >= ECB && symbol <= ECU) // англ загл
+            d = 1;
+        else if (symbol  >= ELB && symbol <= ELU) // англ строчные
+            d = 2;
+        else if (symbol  >= RCB && symbol <= RCU || symbol == 'Ё') // рус загл
+            d = 3;
+        else if (symbol  >= RLB && symbol <= RLU || symbol == 'ё') // рус строчные
+            d = 4;
+        else
+            d = 0;  // на всякий, если ввод произойдет не на англ. или рус. языке
+        return d;
+    }
+
+    public char diapasonRound (char symbol, int diapason){
+        char result = symbol;
+        switch (diapason){
+            case 1:
+                if(symbol < ECB) // символ ниже нижн англ загл
+                    result = (char) (ECU - ECB + symbol + 1);
+                else if (symbol > ECU) // символ выше верхн англ загл
+                    result = (char) (- ECU + ECB + symbol - 1);
+                break;
+            case 2: //англ строчн
+                if(symbol < ELB)
+                    result = (char) (ELU - ELB + symbol + 1);
+                else if (symbol > ELU)
+                    result = (char) (- ELU + ELB + symbol - 1);
+                break;
+            case 3: //росс загл
+                if(symbol < RCB && (symbol != 1025 || key != 0))
+                    result = (char) (RCU - RCB + symbol + 1);
+                else if (symbol > RCU) // символ выше верхн рус загл
+                    result = (char) (- RCU + RCB + symbol - 1);
+                break;
+            case 4: //росс строч
+                if(symbol < RLB)
+                    result = (char) (RLU - RLB + symbol + 1);
+                else if (symbol > RLU && (symbol != 1105 || key != 0))
+                    result = (char) (- RLU + RLB + symbol - 1);
+                break;
+        }
+        return result;
+    }
+
+    private int isYo(char symbol, int diapason) {  // проверяет букву и выдает модификатор с учетом ё  !!!!!!!!
+        int ym = 0;
+        if ((diapason == 3 || diapason == 4) && key != 0){  // если русский символ и сдвиг действительно есть
+            switch (symbol){
+                case 'Ё':
+                    if (key > 0)
+                        ym = 20;    // abs(1045 - Ё)
+                    else if (key < 0)
+                        ym = 21;
+                    break;
+                case 'ё':
+                    if(key > 0)
+                        ym = -28;
+                    else if (key < 0)
+                        ym = -27;
+                    break;
+                default:
+                    ym = yoModification(symbol, diapason);
+                    break;
+            }
+        }
+        return ym;
+    }
+
+    public int yoModification(char symbol, int diapason){  // возвращает коэффициент сдвига с учётом буквы "ё"
+        int modificator = 0;
+        switch (diapason){
+            case 3:  // ЗАГЛАВНАЯ
+                if (symbol < 1046) {
+                    if (symbol + key > 1046)  // если перешагиваем вправо
+                        modificator = -1;
+                    else if (symbol + key == 1046)
+                        modificator = -21;  // К заглавной Ё
+                }
+                if (symbol > 1045) {
+                    if (symbol + key < 1045) // если перешагиваем влево
+                        modificator = 1;
+                    else if (symbol + key == 1045)
+                        modificator = -20;  // К заглавной Ё
+                }
+                break;
+            case 4: // строчная
+                if (symbol < 1078) {
+                    if (symbol + key > 1078)  // если перешагиваем вправо
+                        modificator = -1;
+                    else if (symbol + key == 1078)
+                        modificator = 27;  // К ё
+                }
+                if (symbol > 1077) {
+                    if (symbol + key < 1077) // если перешагиваем влево
+                        modificator = 1;
+                    else if (symbol + key == 1077)
+                        modificator = 28;  // К ё
+                }
+                break;
+        }
+        return modificator;
+    }
+
+    public void FromRussianToEnglish() {
+        spinner.setValue(1);
+        spinner.setModel(new SpinnerNumberModel(1, -25, 25, 1));
+
+    }
+
+    public void FromEnglishToRussian() {
+        spinner.setValue(1);
+        spinner.setModel(new SpinnerNumberModel(1, -32, 32, 1));
+
+    }
+}
+/* всплывающее окно (JOptionPane.PLAIN_MESSAGE - тип сообщения)
+ JOptionPane.showMessageDialog(null, "сообщение", "название окна", JOptionPane.PLAIN_MESSAGE);
+ */
