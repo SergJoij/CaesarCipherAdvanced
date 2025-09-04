@@ -16,7 +16,6 @@ import java.awt.event.ActionListener;
 import java.awt.image.ImageObserver;
 import java.security.Key;
 import java.text.AttributedCharacterIterator;
-//import java.lang.*;
 
 
 public class Inter extends JFrame {
@@ -340,3 +339,4 @@ public class Inter extends JFrame {
 
     }
 }
+
