@@ -100,9 +100,6 @@ public class Inter extends JFrame {
         spinner.setBorder(field_border_1);
         spinner.getComponent(1).setBackground(background_color);
         spinner.getComponent(0).setBackground(background_color);
-        // UIManager.getDefaults().put("Spinner.ButtonDarkShadow", Color.RED);
-        //UIManager.getDefaults().put("Spinner.controlDkShadow", Color.RED);
-        // System.out.println(UIManager.getColor("controlDkShadow"));
 
         Container color_people = super.getContentPane();
         color_people.setLayout(new GridBagLayout());
@@ -185,7 +182,7 @@ public class Inter extends JFrame {
                 char symb = name.charAt(i);
                 if (Character.isLetter(symb) && key != 0){ // если знак является буквой и сдвиг есть
                     int diapason = diapasonForm(symb);
-                    // Спасибо замечательным Ё (1025) и ё (1105): Е, е (1045, 1077), а Ж,ж (1046, 1078)
+                    // Ё (1025) и ё (1105): Е, е (1045, 1077), Ж,ж (1046, 1078)
                     symb = correctShift(symb, diapason);
                 }
                 else if (Character.isSpaceChar(symb) && key != 0){
@@ -343,6 +340,3 @@ public class Inter extends JFrame {
 
     }
 }
-/* всплывающее окно (JOptionPane.PLAIN_MESSAGE - тип сообщения)
- JOptionPane.showMessageDialog(null, "сообщение", "название окна", JOptionPane.PLAIN_MESSAGE);
- */
